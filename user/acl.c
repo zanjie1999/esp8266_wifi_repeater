@@ -127,7 +127,7 @@ uint8_t allow;
     switch (proto) {
     case IP_PROTO_UDP:
 	if (p->len < sizeof(struct eth_hdr)+sizeof(struct ip_hdr)+sizeof(struct udp_hdr))
-	    return;
+	    return ACL_DENY;
 	udp_h = (struct udp_hdr *)&packet[sizeof(struct eth_hdr)+sizeof(struct ip_hdr)];
 	src_port = ntohs(udp_h->src);
 	dest_port = ntohs(udp_h->dest);
@@ -135,7 +135,7 @@ uint8_t allow;
 
     case IP_PROTO_TCP:
 	if (p->len < sizeof(struct eth_hdr)+sizeof(struct ip_hdr)+sizeof(struct tcp_hdr))
-	    return;
+	    return ACL_DENY;
 	tcp_h = (struct tcp_hdr *)&packet[sizeof(struct eth_hdr)+sizeof(struct ip_hdr)];
 	src_port = ntohs(tcp_h->src);
 	dest_port = ntohs(tcp_h->dest);
@@ -185,7 +185,7 @@ void ICACHE_FLASH_ATTR addr2str(uint8_t *buf, uint32_t addr, uint32_t mask)
 {
 uint8_t clidr;
 
-    if (addr == 0) {
+    if (addr == 0 && mask == 0) {
 	os_sprintf(buf, "any");
 	return;
     }
@@ -224,7 +224,7 @@ uint8_t line[80], addr1[21], addr2[21], port1[6], port2[6];
 	addr2str(addr2, my_entry->dest, my_entry->d_mask);
 	port2str(port2, my_entry->d_port);
 	if (my_entry->proto != 0)
-	    os_sprintf(line, "%s %s:%s %s:%s%s %s (%d hits)\r\n",
+	    os_sprintf(line, "%s %s:%s %s:%s %s%s (%d hits)\r\n",
 		my_entry->proto==IP_PROTO_TCP?"TCP":"UDP", 
 		addr1, port1, addr2, port2,
 		(my_entry->allow & ACL_ALLOW)?"allow":"deny",
